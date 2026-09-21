@@ -1,0 +1,19 @@
+## Interface: 20400
+## Title: ClassSphere
+## Notes: Sphere de raccourcis utilitaires par classe pour WoW 2.4.3
+## Author: Loic / ChatGPT
+## Version: 0.1.7
+## SavedVariables: ClassSphereDB
+
+Core.lua
+Data.lua
+Classes\Mage.lua
+Classes\Shaman.lua
+Classes\Rogue.lua
+Classes\Warlock.lua
+Classes\Priest.lua
+Classes\Paladin.lua
+Classes\Druid.lua
+Classes\Hunter.lua
+Classes\Warrior.lua
+UI.lua
