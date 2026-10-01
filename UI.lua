@@ -30,6 +30,8 @@ function CS:EnsureConfig()
     f.title=f:CreateFontString(nil,"OVERLAY","GameFontHighlightLarge"); f.title:SetPoint("TOP",f,"TOP",0,-16); f.title:SetText("ClassSphere 2.4.3")
     local close=MakeButton(f,"Fermer",80,22); close:SetPoint("BOTTOMRIGHT",f,"BOTTOMRIGHT",-18,18); close:SetScript("OnClick",function() f:Hide() end)
 
+    local professions=MakeButton(f,"Métiers",100,22); professions:SetPoint("BOTTOMLEFT",f,"BOTTOMLEFT",18,18); professions:SetScript("OnClick",function() if CS.professions then CS.professions:ToggleConfig() end end)
+
     local lock=MakeCheck(f,"Verrouiller la sphère"); lock:SetPoint("TOPLEFT",f,"TOPLEFT",24,-52); lock:SetScript("OnClick",function() CS.db.locked=this:GetChecked() and true or false end); f.lock=lock
     local visible=MakeCheck(f,"Afficher la sphère"); visible:SetPoint("TOPLEFT",f,"TOPLEFT",245,-52); visible:SetScript("OnClick",function() CS.db.visible=this:GetChecked() and true or false; CS:QueueRefresh() end); f.visible=visible
 

@@ -2,7 +2,7 @@
 ## Title: ClassSphere
 ## Notes: Sphere de raccourcis utilitaires par classe pour WoW 2.4.3
 ## Author: Loic / ChatGPT
-## Version: 0.1.7
+## Version: 0.1.8
 ## SavedVariables: ClassSphereDB
 
 Core.lua
@@ -17,3 +17,4 @@ Classes\Druid.lua
 Classes\Hunter.lua
 Classes\Warrior.lua
 UI.lua
+Professions.lua

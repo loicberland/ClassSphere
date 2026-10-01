@@ -1,7 +1,7 @@
 ClassSphere = ClassSphere or {}
 local CS = ClassSphere
 
-CS.VERSION = "0.1.7"
+CS.VERSION = "0.1.8"
 CS.buttons = {}
 CS.menus = {}
 CS.classDefs = {}

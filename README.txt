@@ -30,3 +30,30 @@ FONCTIONS COMMUNES
 - Boutons masquables et ordre modifiable.
 - Clic droit sur les boutons de groupe pour choisir le sort par défaut.
 - Modifications des actions sécurisées reportées après combat si nécessaire.
+
+Version 0.1.8 - Sphere metiers (TBC 2.4.3)
+=========================================
+Installation : remplacer le dossier Interface/AddOns/ClassSphere avec celui du ZIP,
+puis redemarrer WoW ou /reload. Les reglages de classe existants sont conserves.
+
+La sphere metiers apparait initialement a droite du centre de l'ecran.
+Clic gauche au centre : afficher / masquer les deux rangees de raccourcis.
+Clic droit au centre, /csp ou bouton Metiers dans /cs : options metiers.
+Glisser le centre : deplacer. Position et options metiers sauvegardees par personnage.
+Options : activer, boutons toujours visibles, verrouillage, taille sphere/boutons,
+masquer individuellement chaque metier. Seuls les metiers connus sont affiches.
+
+Clic gauche : ouvrir le metier ou lancer l'action de recolte.
+Clic droit : Desenchanter (enchantement), Prospecter (joaillerie),
+Fondre (minage), Feu de camp (cuisine), Decouverte de poissons (peche).
+Herboristerie : Decouverte d'herbes. Minage : Decouverte de gisements.
+Peche : Pecher. Dep ecage : Depecer.
+Les detections actives sont colorees en vert. Le survol indique les clics
+et le niveau du metier lorsqu'il est disponible dans la fenetre des competences.
+Les actions secondaires non apprises ne sont pas attribuees au clic droit.
+Desenchanter et Prospecter demandent ensuite de cliquer l'objet dans les sacs,
+comme les sorts ordinaires. Aucun traitement automatique des objets.
+
+Affichage, deplacement et changements des boutons securises hors combat.
+Les changements demandes dans les options en combat attendent sa fin.
+Validation : syntaxe Lua et tests avec simulation de l'API ; test en jeu requis.
