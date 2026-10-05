@@ -57,16 +57,68 @@ function CS:EnsureConfig()
     local menuDelayHint=f:CreateFontString(nil,"OVERLAY","GameFontNormalSmall"); menuDelayHint:SetPoint("LEFT",menuDelay,"RIGHT",25,0); menuDelayHint:SetText("0 = désactivé")
 
     local sep=f:CreateTexture(nil,"ARTWORK") sep:SetTexture("Interface\\Common\\UI-TooltipDivider-Transparent") sep:SetHeight(8) sep:SetPoint("TOPLEFT",f,"TOPLEFT",18,-258) sep:SetPoint("TOPRIGHT",f,"TOPRIGHT",-18,-258)
-    local bl=f:CreateFontString(nil,"OVERLAY","GameFontHighlight") bl:SetPoint("TOPLEFT",f,"TOPLEFT",24,-276) bl:SetText("Boutons visibles / ordre")
+    local bl=f:CreateFontString(nil, "OVERLAY", "GameFontHighlight") bl:SetPoint("TOPLEFT", f, "TOPLEFT", 24, -276) bl:SetText("Boutons : nombre (0 = masqué) / ordre")
+    f.rows = {}
 
-    f.rows={}
     local i
-    for i=1,9 do
-        local row=CreateFrame("Frame",nil,f); row:SetWidth(450); row:SetHeight(25); row:SetPoint("TOPLEFT",f,"TOPLEFT",24,-296-(i-1)*27)
-        row.check=MakeCheck(row,""); row.check:SetPoint("LEFT",row,"LEFT",0,0)
-        row.up=MakeButton(row,"+",26,20); row.up:SetPoint("RIGHT",row,"RIGHT",-32,0)
-        row.down=MakeButton(row,"-",26,20); row.down:SetPoint("RIGHT",row,"RIGHT",0,0)
-        f.rows[i]=row
+    for i = 1, 9 do
+        local row = CreateFrame("Frame", nil, f)
+        row:SetWidth(450)
+        row:SetHeight(25)
+        row:SetPoint("TOPLEFT", f, "TOPLEFT", 24, -296 - (i - 1) * 27)
+
+        row.label = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        row.label:SetPoint("LEFT", row, "LEFT", 0, 0)
+        row.label:SetWidth(245)
+        row.label:SetHeight(24)
+        row.label:SetJustifyH("LEFT")
+
+        row.minus = MakeButton(row, "-", 26, 20)
+        row.minus:SetPoint("LEFT", row, "LEFT", 255, 0)
+
+        row.count = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        row.count:SetPoint("LEFT", row, "LEFT", 283, 0)
+        row.count:SetWidth(30)
+        row.count:SetJustifyH("CENTER")
+
+        row.plus = MakeButton(row, "+", 26, 20)
+        row.plus:SetPoint("LEFT", row, "LEFT", 315, 0)
+
+        row.up = MakeButton(row, "<", 26, 20)
+        row.up:SetPoint("RIGHT", row, "RIGHT", -32, 0)
+
+        row.down = MakeButton(row, ">", 26, 20)
+        row.down:SetPoint("RIGHT", row, "RIGHT", 0, 0)
+
+        row.minus:SetScript("OnClick", function()
+            local cfg = this:GetParent().csCfg
+            if cfg then
+                CS:SetButtonCopies(cfg, CS:GetButtonCopies(cfg) - 1)
+            end
+        end)
+
+        row.plus:SetScript("OnClick", function()
+            local cfg = this:GetParent().csCfg
+            if cfg then
+                CS:SetButtonCopies(cfg, CS:GetButtonCopies(cfg) + 1)
+            end
+        end)
+
+        row.up:SetScript("OnClick", function()
+            local cfg = this:GetParent().csCfg
+            if cfg then
+                CS:MoveOrder(cfg.id, -1)
+            end
+        end)
+
+        row.down:SetScript("OnClick", function()
+            local cfg = this:GetParent().csCfg
+            if cfg then
+                CS:MoveOrder(cfg.id, 1)
+            end
+        end)
+
+        f.rows[i] = row
     end
 
     f.classPanel=CreateFrame("Frame",nil,f); f.classPanel:SetWidth(465); f.classPanel:SetHeight(160); f.classPanel:SetPoint("BOTTOMLEFT",f,"BOTTOMLEFT",24,52)
@@ -74,13 +126,42 @@ function CS:EnsureConfig()
 end
 
 function CS:MoveOrder(id, delta)
-    local idx=nil; local i
-    for i=1,table.getn(self.char.order) do if self.char.order[i]==id then idx=i break end end
-    if not idx then return end
-    local ni=idx+delta
-    if ni<1 or ni>table.getn(self.char.order) then return end
-    self.char.order[idx],self.char.order[ni]=self.char.order[ni],self.char.order[idx]
-    self:QueueRefresh(); self:RefreshConfig()
+    if InCombatLockdown and InCombatLockdown() then
+        self:Print("Modification de l'ordre impossible en combat.")
+        return
+    end
+
+    local def = self.classDefs[self.class]
+    if not def then return end
+
+    local defs = self:GetOrderedDefs(def)
+    local order = {}
+    local index
+    local i
+
+    -- Retire de l'ordre les anciennes catégories supprimées.
+    for i = 1, table.getn(defs) do
+        order[i] = defs[i].id
+
+        if order[i] == id then
+            index = i
+        end
+    end
+
+    if not index then return end
+
+    local newIndex = index + delta
+
+    if newIndex < 1 or newIndex > table.getn(order) then
+        return
+    end
+
+    order[index], order[newIndex] = order[newIndex], order[index]
+    self.char.order = order
+
+    self:HideAllMenus()
+    self:QueueRefresh()
+    self:RefreshConfig()
 end
 
 local function ClearPanel(p)
@@ -152,14 +233,51 @@ function CS:RefreshConfig()
         )
     end
     
-    local def=self.classDefs[self.class]; local defs=def and self:GetOrderedDefs(def) or {}
+    local def = self.classDefs[self.class]
+    local defs = def and self:GetOrderedDefs(def) or {}
+
     local i
-    for i=1,9 do
-        local row=f.rows[i]; local cfg=defs[i]
+    for i = 1, table.getn(f.rows) do
+        local row = f.rows[i]
+        local cfg = defs[i]
+
+        row.csCfg = cfg
+
         if cfg then
-            row:Show(); row.check.text:SetText(cfg.label or cfg.id); row.check:SetChecked(self:IsButtonEnabled(cfg.id,cfg.default)); row.check.csId=cfg.id; row.check:SetScript("OnClick",function() CS.char.buttons[this.csId]=this:GetChecked() and true or false; CS:QueueRefresh() end)
-            row.up.csId=cfg.id; row.up:SetScript("OnClick",function() CS:MoveOrder(this.csId,-1) end); row.down.csId=cfg.id; row.down:SetScript("OnClick",function() CS:MoveOrder(this.csId,1) end)
-        else row:Hide() end
+            local count = self:GetButtonCopies(cfg)
+            local limit = self:GetButtonCopyLimit(cfg)
+
+            row.label:SetText(cfg.label or cfg.id)
+            row.count:SetText(tostring(count))
+
+            if count > 0 then
+                row.minus:Enable()
+            else
+                row.minus:Disable()
+            end
+
+            if count < limit then
+                row.plus:Enable()
+            else
+                row.plus:Disable()
+            end
+
+            if i > 1 then
+                row.up:Enable()
+            else
+                row.up:Disable()
+            end
+
+            if i < table.getn(defs) then
+                row.down:Enable()
+            else
+                row.down:Disable()
+            end
+
+            row:Show()
+        else
+            row:Hide()
+        end
     end
     ClearPanel(f.classPanel)
     if self.class=="SHAMAN" then self:BuildShamanConfig(f.classPanel) elseif self.class=="WARLOCK" then self:BuildWarlockConfig(f.classPanel) else

@@ -77,6 +77,7 @@ function CS:GetCharDB()
         ClassSphereDB.chars[self.playerKey] = c
     end
     c.buttons = c.buttons or {}
+    c.buttonCopies = c.buttonCopies or {}
     c.selections = c.selections or {}
     c.order = c.order or {}
     c.shaman = c.shaman or {}
@@ -1031,6 +1032,60 @@ function CS:ConfigureButton(b, cfg)
     return false
 end
 
+function CS:GetButtonCopyLimit(cfg)
+    -- Ces boutons utilisent les sets partagés du chaman.
+    if cfg.type == "shamanTotem"
+        or cfg.type == "totemSetCycle"
+        or cfg.type == "totemRecall" then
+        return 1
+    end
+
+    return 8
+end
+
+function CS:GetButtonCopies(cfg)
+    -- Respecte les anciens réglages d'affichage.
+    if not self:IsButtonEnabled(cfg.id, cfg.default) then
+        return 0
+    end
+
+    local count = tonumber(self.char.buttonCopies[cfg.id])
+
+    if count == nil then
+        count = 1
+    end
+
+    return math.max(
+        0,
+        math.min(self:GetButtonCopyLimit(cfg), math.floor(count))
+    )
+end
+
+function CS:SetButtonCopies(cfg, count)
+    if InCombatLockdown and InCombatLockdown() then
+        self:Print("Modification du nombre de boutons impossible en combat.")
+        return
+    end
+
+    count = math.max(
+        0,
+        math.min(
+            self:GetButtonCopyLimit(cfg),
+            math.floor(tonumber(count) or 0)
+        )
+    )
+
+    self.char.buttonCopies[cfg.id] = count
+    self.char.buttons[cfg.id] = count > 0
+
+    self:HideAllMenus()
+    self:QueueRefresh()
+
+    if self.RefreshConfig then
+        self:RefreshConfig()
+    end
+end
+
 function CS:BuildButtons()
     self:EnsureSphere()
     self:UpdateSphereStatus()
@@ -1045,11 +1100,37 @@ function CS:BuildButtons()
     local defs = self:GetOrderedDefs(def)
     local active = {}
     local i
-    for i=1, table.getn(defs) do
+    for i = 1, table.getn(defs) do
         local cfg = defs[i]
-        if self:IsButtonEnabled(cfg.id, cfg.default) then
-            local b = self:AcquireButton(cfg.id)
-            if self:ConfigureButton(b, cfg) then table.insert(active, b) end
+        local copies = self:GetButtonCopies(cfg)
+        local copyIndex
+
+        for copyIndex = 1, copies do
+            local instance = cfg
+
+            if copyIndex > 1 then
+                -- Copie de la définition avec un identifiant indépendant.
+                instance = {}
+
+                for key, value in pairs(cfg) do
+                    instance[key] = value
+                end
+
+                instance.id = cfg.id .. "_copy" .. copyIndex
+
+                -- Une nouvelle copie reprend la sélection du premier bouton.
+                -- Une copie déjà utilisée conserve sa propre sélection.
+                if self.char.selections[instance.id] == nil then
+                    self.char.selections[instance.id] =
+                        self.char.selections[cfg.id]
+                end
+            end
+
+            local b = self:AcquireButton(instance.id)
+
+            if self:ConfigureButton(b, instance) then
+                table.insert(active, b)
+            end
         end
     end
     local n = table.getn(active)
