@@ -10,7 +10,7 @@ local defs = {
     { id="herbs", spell=2366, left=2383, tracking=true },
     { id="jewel", spell=25229, right=31252 },
     { id="leather", spell=2108 },
-    { id="mining", spell=2575, left=2580, right=2656, tracking=true },
+    { id="mining", spell=2575, left=2656, right=2580, tracking=true },
     { id="skinning", spell=8613 },
     { id="tailor", spell=3908 },
     { id="cooking", spell=2550, right=818 },
