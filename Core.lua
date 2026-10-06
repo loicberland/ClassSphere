@@ -515,9 +515,10 @@ function CS:EnsureSphere()
 
     f:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
 
-    f.label = f:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
-    f.label:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -8, 8)
-    f.label:SetText("")
+	f.label = f:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
+	f.label:SetFont("Fonts\\FRIZQT__.TTF", 22, "OUTLINE")
+	f.label:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -8, 8)
+	f.label:SetText("")
 
     self.sphere = f
     self:RestoreSpherePosition()
