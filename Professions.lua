@@ -71,14 +71,22 @@ function P:EnsureSphere()
     f.icon:SetTexture("Interface\\Icons\\Trade_Engineering")
     f.icon:SetTexCoord(.07,.93,.07,.93)
     f:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
-    f:SetScript("OnDragStart",function() if not P.db.locked and not Combat() then this:StartMoving() end end)
+    f:SetScript("OnDragStart",function()
+        if IsShiftKeyDown() and not P.db.locked and not Combat() then
+            this.csDragging=true
+            this:StartMoving()
+        end
+    end)
     f:SetScript("OnDragStop",function()
+        if not this.csDragging then return end
         this:StopMovingOrSizing()
+        this.csDragging=false
         local point,_,relative,x,y=this:GetPoint(1)
         P.db.point=point; P.db.relative=relative; P.db.x=x; P.db.y=y
     end)
     f:SetScript("OnClick",function()
         if arg1=="RightButton" then P:ToggleConfig(); return end
+        if IsShiftKeyDown() then return end
         if Combat() then CS:Print("Les métiers peuvent être affichés ou masqués hors combat."); return end
         P.db.expanded=not P.db.expanded; P:Visibility()
     end)
@@ -86,7 +94,7 @@ function P:EnsureSphere()
         GameTooltip:SetOwner(this,"ANCHOR_RIGHT"); GameTooltip:SetText("ClassSphere : métiers")
         GameTooltip:AddLine("Clic gauche : afficher / masquer",1,1,1)
         GameTooltip:AddLine("Clic droit : options métiers",1,1,1)
-        GameTooltip:AddLine("Glisser : déplacer",1,1,1); GameTooltip:Show()
+        GameTooltip:AddLine("Maj + glisser : déplacer",1,1,1); GameTooltip:Show()
     end)
     f:SetScript("OnLeave",function() GameTooltip:Hide() end)
     f:SetPoint(self.db.point or "CENTER",UIParent,self.db.relative or "CENTER",self.db.x,self.db.y)

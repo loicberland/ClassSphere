@@ -492,13 +492,17 @@ end
 function CS:EnsureSphere()
     if self.sphere then return end
 
-    local f = CreateFrame("Button", "ClassSphereMain", UIParent)
+    local f = CreateFrame("Button", "ClassSphereMain", UIParent, "SecureActionButtonTemplate")
     local sphereSize = (self.Visual and self.Visual.sphereSize) or 64
     f:SetWidth(sphereSize); f:SetHeight(sphereSize)
     f:SetHitRectInsets(10, 10, 10, 10)
     f:SetMovable(true); f:EnableMouse(true)
     f:SetClampedToScreen(true)
     f:RegisterForDrag("LeftButton")
+    -- Equivalent protege de /focus sur la cible, utilisable en combat.
+    -- Maj annule le focus pendant le deplacement.
+    f:SetAttribute("type1", "macro")
+    f:SetAttribute("macrotext1", "/focus [nomod:shift,exists]")
 
     -- Bouton central carré utilisant uniquement les textures du client.
     f.icon = f:CreateTexture(nil, "BACKGROUND")
@@ -524,17 +528,22 @@ function CS:EnsureSphere()
     self:RestoreSpherePosition()
 
     f:SetScript("OnDragStart", function()
-        if not CS.db.locked and (not InCombatLockdown or not InCombatLockdown()) then
+        if IsShiftKeyDown() and not CS.db.locked
+            and (not InCombatLockdown or not InCombatLockdown()) then
+            this.csDragging = true
             this:StartMoving()
         end
     end)
     f:SetScript("OnDragStop", function()
+        if not this.csDragging then return end
         this:StopMovingOrSizing()
+        this.csDragging = false
         CS:SaveSpherePosition()
     end)
-    f:SetScript("OnClick", function()
+    -- Conserver le OnClick securise pour la commande /focus.
+    -- Le clic droit continue d'ouvrir la configuration.
+    f:SetScript("OnMouseUp", function()
         CS:HideAllMenus()
-
         if arg1 == "RightButton" and CS.ToggleConfig then
             CS:ToggleConfig()
         end
@@ -543,7 +552,8 @@ function CS:EnsureSphere()
     f:SetScript("OnEnter", function()
         GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
         GameTooltip:SetText("ClassSphere " .. CS.VERSION)
-        GameTooltip:AddLine("Glisser : déplacer", 1,1,1)
+        GameTooltip:AddLine("Clic gauche : focus sur la cible", 1,1,1)
+        GameTooltip:AddLine("Maj + glisser : déplacer", 1,1,1)
         GameTooltip:AddLine("Clic droit : configuration", 1,1,1)
         GameTooltip:Show()
     end)
