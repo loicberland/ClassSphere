@@ -7,7 +7,7 @@ local defs = {
     { id="blacksmith", spell=2018 },
     { id="enchant", spell=7411, right=13262 },
     { id="engineer", spell=4036 },
-    { id="herbs", spell=2366, left=2383, tracking=true },
+    { id="herbs", spell=2366, left=2383, tracking=true, skillName="Herboristerie" },
     { id="jewel", spell=25229, right=31252 },
     { id="leather", spell=2108 },
     { id="mining", spell=2575, left=2656, right=2580, tracking=true },
@@ -42,9 +42,10 @@ end
 local function Tooltip(b)
     GameTooltip:SetOwner(b, "ANCHOR_RIGHT")
     GameTooltip:SetText(b.profName)
+    local skillName = b.skillName or b.profName
     for i=1,GetNumSkillLines() do
         local name, header, _, rank, _, _, maximum = GetSkillLineInfo(i)
-        if not header and name==b.profName then
+        if not header and name==skillName then
             GameTooltip:AddLine(tostring(rank).." / "..tostring(maximum), 1,1,1)
             break
         end
@@ -118,7 +119,7 @@ function P:Refresh()
                 b:SetScript("OnLeave",function() GameTooltip:Hide() end)
                 self.buttons[d.id]=b
             end
-            b.profName=profession.name; b.left=Learned(d.left or d.spell); b.right=Learned(d.right)
+            b.profName=profession.name; b.skillName=d.skillName; b.left=Learned(d.left or d.spell); b.right=Learned(d.right)
             for click=1,2 do
                 local s=click==1 and b.left or b.right
                 b:SetAttribute("type"..click,s and "spell" or nil)
