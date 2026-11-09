@@ -7,7 +7,7 @@ local defs = {
     { id="blacksmith", spell=2018 },
     { id="enchant", spell=7411, right=13262 },
     { id="engineer", spell=4036 },
-    { id="herbs", spell=2366, left=2383, tracking=true, skillName="Herboristerie" },
+    { id="herbs", spell=2366, right=2383, tracking=true, skillName="Herboristerie" },
     { id="jewel", spell=25229, right=31252 },
     { id="leather", spell=2108 },
     { id="mining", spell=2575, left=2656, right=2580, tracking=true },
@@ -15,7 +15,7 @@ local defs = {
     { id="tailor", spell=3908 },
     { id="cooking", spell=2550, right=818 },
     { id="firstaid", spell=3273 },
-    { id="fishing", spell=7620, right=43308, trackingRight=true },
+    { id="fishing", spell=7620, right=43308, tracking=true },
 }
 local function Combat() return InCombatLockdown and InCombatLockdown() end
 local function Learned(id)
@@ -52,6 +52,9 @@ local function Tooltip(b)
     end
     if b.left then GameTooltip:AddLine("Clic gauche : "..b.left.name, 1,1,1) end
     if b.right then GameTooltip:AddLine("Clic droit : "..b.right.name, 1,1,1) end
+    if b.unauraSpellID then
+        GameTooltip:AddLine("Maj + clic droit : retirer le pistage", 1,1,1)
+    end
     GameTooltip:Show()
 end
 function P:Visibility()
@@ -120,10 +123,19 @@ function P:Refresh()
                 self.buttons[d.id]=b
             end
             b.profName=profession.name; b.skillName=d.skillName; b.left=Learned(d.left or d.spell); b.right=Learned(d.right)
+            b.unauraSpellID = d.tracking and d.right or nil
             for click=1,2 do
                 local s=click==1 and b.left or b.right
                 b:SetAttribute("type"..click,s and "spell" or nil)
                 b:SetAttribute("spell"..click,s and s.name or nil)
+            end
+            -- Maj + clic droit : retirer le pistage
+            if d.tracking and d.right then
+                b:SetAttribute("shift-type2", "macro")
+                b:SetAttribute("shift-macrotext2", "/say .unaura "..d.right)
+            else
+                b:SetAttribute("shift-type2", nil)
+                b:SetAttribute("shift-macrotext2", nil)
             end
             local s=b.left or profession
             b.icon:SetTexture(s.slot and GetSpellTexture(s.slot,BOOKTYPE_SPELL) or "Interface\\Icons\\INV_Misc_QuestionMark")
